@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lead-line-lens"
+version = "0.1.0"
+description = "Decode a water utility's lead service line inventory for residents, block clubs, and aldermanic offices."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { text = "TBD (see LICENSE)" }
+authors = [{ name = "Pradyumna Kumar" }]
+dependencies = [
+    # data + geo
+    "numpy==2.4.6",
+    "pandas==3.1.0",
+    "scipy==1.17.1",
+    "geopandas==1.2.0",
+    "shapely==2.2.0",
+    "pyproj==3.7.2",
+    "pyogrio==0.13.0",
+    "pyarrow==26.0.0",
+    "openpyxl==3.1.5",
+    "pandera==0.35.0",
+    "usaddress==0.5.16",
+    # model
+    "lightgbm==4.7.0",
+    "scikit-learn==1.9.1",
+    "shap==0.51.0",
+    "matplotlib==3.11.2",
+    # api
+    "fastapi==0.162.0",
+    "uvicorn[standard]==0.54.0",
+    "python-multipart==0.0.32",
+    "httpx==0.28.1",
+    "requests==2.34.2",
+    # front end
+    "streamlit==1.66.1",
+    "folium==0.20.0",
+    "streamlit-folium==0.27.4",
+    # documents
+    "jinja2==3.1.6",
+    "weasyprint==70.0",
+    "python-docx==1.2.0",
+    "textstat==0.7.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.2.0",
+    "pytest-cov==7.1.0",
+    "ruff==0.17.3",
+    "nbformat==5.11.1",
+    "nbconvert==7.17.2",
+    "ipykernel==7.4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["src/lll", "api"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]

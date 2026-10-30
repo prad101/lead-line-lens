@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    image: lead-line-lens:dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  streamlit:
+    image: lead-line-lens:dev
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data:ro
+    command: >
+      streamlit run app/streamlit_app.py
+      --server.port 8501 --server.address 0.0.0.0

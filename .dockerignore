@@ -1,0 +1,12 @@
+.git
+.github
+data
+notebooks
+prompts
+tests
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.pages
+*.docx
+.DS_Store

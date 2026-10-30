@@ -1,0 +1,37 @@
+# Data: raw downloads and generated tables never go in git
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/scorecards/
+
+# Model artifacts are versioned with the master table, not in git
+models/*.pkl
+models/*.txt
+
+# Project brief (ChiEAC internal) and local scratch
+*.pages
+Lead_Line_Lens_*Brief*.docx
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.env
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
