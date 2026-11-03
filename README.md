@@ -53,6 +53,16 @@ uvicorn api.main:app --reload --no-access-log   # http://localhost:8000/docs
 streamlit run app/streamlit_app.py              # http://localhost:8501
 ```
 
+### Build the master table
+
+Download the sources listed in [docs/data_dictionary.md](docs/data_dictionary.md) into `data/raw/`, then:
+
+```bash
+python scripts/build_master.py          # writes data/processed/master_chicago_<snapshot>.parquet
+```
+
+The first run calls the Census Geocoder for unmatched addresses (about 9 minutes); later runs reuse the cached result. See [Gate 1](docs/gates/gate1.md) for the matching rate and EDA.
+
 On macOS, WeasyPrint needs Pango. Either `brew install pango`, or install it into the conda env (`conda install -c conda-forge pango`) and set `WEASYPRINT_DLL_DIRECTORIES=$CONDA_PREFIX/lib`. LightGBM needs OpenMP (`conda install -c conda-forge llvm-openmp`).
 
 ### Docker
