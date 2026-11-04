@@ -210,6 +210,16 @@ def build_master_table(
     return df
 
 
+def latest_master(processed_dir=None, columns=None) -> tuple[pd.DataFrame, str]:
+    """Most recent master_chicago_<snapshot>.parquet and its snapshot (YYYYMMDD)."""
+    from lll import PROCESSED_DIR
+
+    files = sorted((processed_dir or PROCESSED_DIR).glob("master_chicago_*.parquet"))
+    if not files:
+        raise FileNotFoundError("No master table; run scripts/build_master.py first.")
+    return pd.read_parquet(files[-1], columns=columns), files[-1].stem.rsplit("_", 1)[-1]
+
+
 def area_aggregates(master: pd.DataFrame, level: str) -> pd.DataFrame:
     """Counts and shares by line status for one area level, small cells suppressed."""
     from lll.equity import aggregate

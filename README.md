@@ -63,6 +63,15 @@ python scripts/build_master.py          # writes data/processed/master_chicago_<
 
 The first run calls the Census Geocoder for unmatched addresses (about 9 minutes); later runs reuse the cached result. See [Gate 1](docs/gates/gate1.md) for the matching rate and EDA.
 
+### Build the disparity report and scorecards
+
+```bash
+python scripts/build_equity.py          # ACS join, tract/ward tables, CSVs in data/processed/equity_chicago_<snapshot>/
+python -m lll.scorecard                 # 50 ward PDFs in data/processed/scorecards_chicago_<snapshot>/
+```
+
+`build_equity.py` reads the Census API key from `CENSUS_API_KEY` on the first run and caches the ACS tables; add `--refresh-acs` to download again. The Streamlit report and scorecard pages and `GET /scorecard/ward/{ward}.pdf` read these outputs. See [Gate 5](docs/gates/gate5.md) and the [methodology](docs/methodology.md).
+
 On macOS, WeasyPrint needs Pango. Either `brew install pango`, or install it into the conda env (`conda install -c conda-forge pango`) and set `WEASYPRINT_DLL_DIRECTORIES=$CONDA_PREFIX/lib`. LightGBM needs OpenMP (`conda install -c conda-forge llvm-openmp`).
 
 ### Docker

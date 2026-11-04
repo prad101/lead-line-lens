@@ -175,6 +175,21 @@ n_lead, n_grr, n_unknown, n_nonlead, n_replaced, the matching share_* columns, a
 suppressed. Any area with fewer than 5 lines has every count and share blanked and
 suppressed = True (`lll.equity.suppress_small_cells`).
 
+## Disparity report (`data/processed/equity_chicago_<snapshot>/*.csv`)
+
+Built by `scripts/build_equity.py`; definitions in [methodology.md](methodology.md#disparity-measures).
+
+| File | One row per | Columns beyond the area aggregate columns |
+|---|---|---|
+| tract.csv | tract with lines | n_needs_action, share_needs_action, ACS fields (median_income, pop_*, pct_black / latino / white / asian, kids_under3 / kids_3_4 / kids_5 and their sum kids_under6, housing_units, units_1940s / units_pre1940 and their sum units_pre1950, pct_housing_pre1950, majority_group, acs_year), income_quartile |
+| ward.csv | ward | n_needs_action, share_needs_action, ward ACS fields (apportioned by area), rank_needs_action (1 = largest share to fix or check) |
+| income_quartiles.csv | quartile | pooled counts and shares, areas (tracts), income_min, income_max |
+| majority_group.csv | majority group | pooled counts and shares, areas (tracts) |
+| disparity_ratios.csv | group × metric | comparison, group, reference, metric, group_rate, reference_rate, ratio |
+
+ACS cache: `data/processed/acs_2024_cook_tracts.parquet` (1,332 Cook County tracts) and
+`acs_2024_wards.parquet`.
+
 ## Matching report (`data/processed/matching_report_chicago_<snapshot>.csv`)
 
 Rows and share by outcome code with a description and a matched flag; sums to 100% of lines.
