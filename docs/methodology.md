@@ -119,13 +119,23 @@ All tables are in the app's disparity report and its CSV downloads.
 
 ## Prediction model
 
-Not built yet (Gate 2). Until model v1 is calibrated and its model card is published, every
-"predicted lead among unknown lines" value reads "Pending model v1". When it is added:
+LightGBM v1 predicts whether the **customer side** is lead or galvanized, trained on
+215,692 known rows (Home Built Date labels held out). Probabilities are isotonic-calibrated.
+Validation is GroupKFold by census block group. The model card
+([docs/model_card.md](model_card.md)) has metrics, the reliability diagram, SHAP, and
+error rates by income and race.
 
-- A prediction never lowers urgency. An Unknown line stays "possibly lead until checked"
-  whatever its predicted probability.
-- Predicted shares are suppressed under the same 5-line rule.
-- Calibration, validation, and known failure modes will be in the model card.
+Headline out-of-fold numbers: PR-AUC 0.960, ECE 0.001, balanced accuracy 0.916. That
+headline is pulled up by rows whose utility side is already known. When the utility side
+is also Unknown — the usual lookup — ROC-AUC is 0.76 and the model mostly predicts lead
+(mean probability 0.83 among current unknowns).
+
+Rules that do not change with the score:
+
+- A prediction never lowers urgency. An Unknown line stays "possibly lead until checked".
+- Predicted shares follow the same 5-line suppression rule as every other count.
+- False non-lead is not higher in lower-income or majority-Black/Latino tracts, so v1
+  does not raise the non-lead confidence bar for those tracts.
 
 ## What residents can do
 

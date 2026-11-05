@@ -72,6 +72,14 @@ python -m lll.scorecard                 # 50 ward PDFs in data/processed/scoreca
 
 `build_equity.py` reads the Census API key from `CENSUS_API_KEY` on the first run and caches the ACS tables; add `--refresh-acs` to download again. The Streamlit report and scorecard pages and `GET /scorecard/ward/{ward}.pdf` read these outputs. See [Gate 5](docs/gates/gate5.md) and the [methodology](docs/methodology.md).
 
+### Train the model
+
+```bash
+python scripts/train_model.py           # writes models/lll_lightgbm_v1.pkl and calibrator_v1.pkl
+```
+
+About 30 seconds after the master table exists. See the [model card](docs/model_card.md) and [Gate 2](docs/gates/gate2.md).
+
 On macOS, WeasyPrint needs Pango. Either `brew install pango`, or install it into the conda env (`conda install -c conda-forge pango`) and set `WEASYPRINT_DLL_DIRECTORIES=$CONDA_PREFIX/lib`. LightGBM needs OpenMP (`conda install -c conda-forge llvm-openmp`).
 
 ### Docker

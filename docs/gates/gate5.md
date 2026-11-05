@@ -67,6 +67,7 @@ logged on #37.
 
 ## Cut or deferred
 
-- Predicted lead among unknown lines: shows "Pending model v1" until Gate 2.
+- Predicted lead among unknown lines: filled by Gate 2 (`scripts/train_model.py` refreshes
+  the equity CSVs). PDFs need `python -m lll.scorecard` after a retrain.
 - ACS margins of error are not shown; listed under limitations.
 - The Streamlit pages read processed files directly; they switch to `GET /area` with Gate 3.
