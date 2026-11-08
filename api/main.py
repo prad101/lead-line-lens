@@ -29,4 +29,5 @@ app.include_router(utility.router)
 
 @app.get("/health", tags=["meta"])
 def health() -> dict[str, str]:
+    """Liveness. Does not load the inventory; missing data is a 503 on the data routes."""
     return {"status": "ok", "version": __version__}

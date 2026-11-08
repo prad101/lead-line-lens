@@ -88,6 +88,8 @@ On macOS, WeasyPrint needs Pango. Either `brew install pango`, or install it int
 docker compose up --build   # API on :8000, Streamlit on :8501
 ```
 
+Compose mounts `./data` and `./models` read-only. The image does not bake in the gitignored parquet or `.pkl` files. `GET /health` stays cheap and does not load the inventory.
+
 ### CI
 
 GitHub Actions runs `ruff check` and `pytest` on every push ([.github/workflows/ci.yml](.github/workflows/ci.yml)). To make a failing check block merges, enable branch protection on `main` (Settings → Branches → require the `lint-test` status check).
@@ -95,6 +97,17 @@ GitHub Actions runs `ruff check` and `pytest` on every push ([.github/workflows/
 ## Hosting
 
 Staging and production deploy to **Render** (one Docker web service for the API, one for Streamlit). Chosen once; not switching.
+
+The gitignored inventory and model are **not** in the image. Attach one persistent disk and point the env vars at it:
+
+| Env | Example on the disk | Contents |
+|---|---|---|
+| `LLL_DATA_DIR` | `/persist/data` | `processed/master_chicago_*.parquet`, `equity_chicago_*/*.csv`, scorecard PDFs |
+| `LLL_MODEL_DIR` | `/persist/models` | `lll_lightgbm_v1.pkl`, `calibrator_v1.pkl` |
+
+Copy those files onto the disk once after the first deploy. Until then, `/health` is 200 and lookup/predict/area/scorecard return 503. Start the API with `--no-access-log` (already the Docker `CMD`) so address query strings are not logged.
+
+The staging URL is created on the first Render deploy ([#29](https://github.com/prad101/lead-line-lens/issues/29)).
 
 ## Privacy
 

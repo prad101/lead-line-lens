@@ -1,8 +1,42 @@
-{# Verification and prioritization request. Filled in Gate 3. Keep at or below 8th-grade reading level. #}
+{# Keep at or below 8th-grade reading level. Nothing here is legal or medical advice. #}
 {{ today }}
 
 Commissioner
 Department of Water Management
 City of Chicago
 
-Re: Service line at {{ address }}
+Re: Water service line at {{ address }}{% if ward %}, Ward {{ ward }}{% endif %}
+
+Hello,
+
+I am writing about the water service line at {{ address }}. City records{% if snapshot %} as of {{ snapshot }}{% endif %} say:
+
+- The city's side of the line: {{ utility_side_material }}
+- The property's side of the line: {{ customer_side_material }}
+
+{% if customer_side_material == "Unknown" or utility_side_material == "Unknown" -%}
+"Unknown" means the city has no record. Please treat this line as possibly lead until it is checked.
+{% endif -%}
+{% if probability_lead is not none -%}
+A public model estimates a {{ (probability_lead * 100) | round | int }}% chance the property side is lead or galvanized (confidence: {{ tier }}). This is not an inspection. Please still check the line.
+{% endif %}
+{% if child_or_pregnancy -%}
+Someone in this home is pregnant or under 6 years old. Lead is most harmful to young children and pregnant people.
+{% endif -%}
+{% if has_filter == "no" -%}
+We do not have a certified filter on our tap.
+{% endif -%}
+{% if notified == "no" -%}
+I was not told that this line may be lead.
+{% endif %}
+
+I ask that the city:
+
+{% for item in requests -%}
+{{ loop.index }}. {{ item }}
+{% endfor %}
+
+This letter is a request I can edit and send. It is not legal advice.
+
+Thank you,
+A resident of {{ address }}

@@ -7,6 +7,7 @@ A prediction never lowers urgency: an Unknown line is always shown as
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -49,14 +50,22 @@ def confidence_tier(p: float, group: str | None = None,
 
 
 def load_model(model_dir: str | Path | None = None) -> dict:
-    """Load the LightGBM bundle and calibrator saved by train.py."""
-    import pickle
-
+    """Load the LightGBM bundle and calibrator saved by train.py (cached by mtime)."""
     from lll import MODEL_DIR
 
     d = Path(model_dir) if model_dir else MODEL_DIR
-    bundle = pickle.loads((d / "lll_lightgbm_v1.pkl").read_bytes())
-    bundle["calibrator"] = pickle.loads((d / "calibrator_v1.pkl").read_bytes())
+    model_p = d / "lll_lightgbm_v1.pkl"
+    cal_p = d / "calibrator_v1.pkl"
+    return _load_model_cached(str(model_p), model_p.stat().st_mtime_ns,
+                              str(cal_p), cal_p.stat().st_mtime_ns)
+
+
+@lru_cache(maxsize=2)
+def _load_model_cached(model_path: str, model_mtime: int, cal_path: str, cal_mtime: int) -> dict:
+    import pickle
+
+    bundle = pickle.loads(Path(model_path).read_bytes())
+    bundle["calibrator"] = pickle.loads(Path(cal_path).read_bytes())
     return bundle
 
 
@@ -190,7 +199,10 @@ def _shap_one(bundle: dict, matrix_row: pd.DataFrame) -> dict[str, float]:
 
     from lll.train import FEATURES
 
-    explainer = shap.TreeExplainer(bundle["model"])
+    explainer = bundle.get("_explainer")
+    if explainer is None:
+        explainer = shap.TreeExplainer(bundle["model"])
+        bundle["_explainer"] = explainer
     sv = explainer.shap_values(matrix_row)
     if isinstance(sv, list):
         sv = sv[1]
