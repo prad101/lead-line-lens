@@ -10,7 +10,8 @@ RUN apt-get update \
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     LLL_DATA_DIR=/app/data \
-    LLL_MODEL_DIR=/app/models
+    LLL_MODEL_DIR=/app/models \
+    LLL_TEMPLATE_DIR=/app/templates
 
 WORKDIR /app
 
