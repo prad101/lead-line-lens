@@ -54,6 +54,19 @@ def _key(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", str(name).lower())
 
 
+def read_bytes(data: bytes, filename: str) -> pd.DataFrame:
+    """Read an uploaded CSV or XLSX from memory. Does not write to disk."""
+    from io import BytesIO
+
+    name = filename.lower()
+    buf = BytesIO(data)
+    if name.endswith((".xlsx", ".xlsm", ".xls")):
+        return pd.read_excel(buf, dtype=str)
+    if name.endswith(".csv"):
+        return pd.read_csv(buf, dtype=str, encoding="utf-8-sig", low_memory=False)
+    raise ValueError("Upload a CSV or Excel file.")
+
+
 def read_table(path: str | Path) -> pd.DataFrame:
     """Read a CSV or XLSX file into a DataFrame of strings."""
     path = Path(path)

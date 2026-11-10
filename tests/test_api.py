@@ -171,10 +171,46 @@ def test_letter_returns_text_docx_and_mailto(monkeypatch):
     assert "Unknown" in body["text"]
 
 
-def test_utility_stays_unimplemented():
-    spec = client.get("/openapi.json").json()
-    assert "501" in spec["paths"]["/utility/upload"]["post"]["responses"]
-    assert client.post("/utility/upload").status_code in {501, 422}
+def test_utility_upload_map_classify_export():
+    import pandas as pd
+
+    from api import jobs
+
+    jobs.reset()
+    df = pd.DataFrame({
+        "line_id": [f"L{i}" for i in range(250)],
+        "address": ["1 Main St"] * 250,
+        "utility_side_material": ["Unknown"] * 250,
+        "customer_side_material": ["Lead"] * 120 + ["Non-Lead"] * 80 + ["Unknown"] * 50,
+        "year_built": [1920] * 250,
+    })
+    csv = df.to_csv(index=False).encode()
+    up = client.post("/utility/upload", files={"file": ("inv.csv", csv, "text/csv")})
+    assert up.status_code == 200
+    job_id = up.json()["job_id"]
+    assert up.json()["n_rows"] == 250
+    mapped = client.post("/utility/map", json={"job_id": job_id, "system_name": "Testville"})
+    assert mapped.status_code == 200
+    scored = client.post("/utility/classify", json={"job_id": job_id})
+    assert scored.status_code == 200
+    body = scored.json()
+    assert body["n_known"] == 200
+    assert body["warning"] is None
+    sample = client.post("/utility/sample-plan", json={"job_id": job_id})
+    assert sample.status_code == 200
+    assert sample.json()["n"] <= 60
+    exported = client.post("/utility/export", json={"job_id": job_id})
+    assert exported.status_code == 200
+    assert "Illinois EPA" in exported.json()["memo"]
+    assert exported.json()["csv_base64"]
+
+
+def test_utility_unknown_job_is_404():
+    from api import jobs
+
+    jobs.reset()
+    assert client.post("/utility/map", json={"job_id": "missing"}).status_code == 404
+    assert client.post("/utility/upload").status_code in {400, 422}
 
 
 def test_openapi_documents_error_responses():

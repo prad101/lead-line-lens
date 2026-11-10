@@ -82,6 +82,10 @@ About 30 seconds after the master table exists. See the [model card](docs/model_
 
 On macOS, WeasyPrint needs Pango. Either `brew install pango`, or install it into the conda env (`conda install -c conda-forge pango`) and set `WEASYPRINT_DLL_DIRECTORIES=$CONDA_PREFIX/lib`. LightGBM needs OpenMP (`conda install -c conda-forge llvm-openmp`).
 
+### Utility edition
+
+The Streamlit **Utility edition** page uploads a CSV/XLSX (in memory only), maps columns, scores unknown lines, draws a 60-line stratified verification sample, and exports an Illinois EPA template plus a methods memo. With 200 or more known customer-side rows it fits a fresh model; otherwise it uses the Chicago model and shows a transfer warning. Turn it off with `LLL_UTILITY_EDITION=0`. Demo buttons load Burnham and East Dundee from `data/raw/small_systems/`.
+
 ### Docker
 
 ```bash

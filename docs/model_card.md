@@ -165,8 +165,10 @@ Confidence tiers (unchanged): High if p ≥ 0.85 or p ≤ 0.15; Moderate if 0.65
   features spread that pattern to nearby unknowns.
 - **No diameter in Chicago.** The column is always missing here.
 - **Install year is 93% missing.** Its SHAP value is largely "missing vs present".
-- **Transfer to other systems is unproven.** Burnham and East Dundee are reserved for the
-  utility edition (Gate 6).
+- **Transfer to other systems is unproven.** The utility edition applies this Chicago
+  model when an upload has fewer than 200 known customer-side rows, and always warns
+  that the scores are not a verification. With 200 or more known rows it fits a new
+  in-memory model on that inventory and does not write a pickle.
 - **One snapshot.** Lines verified or replaced after 14 April 2025 are not in the labels.
 - **Not a replacement for digging.** A high probability is not an inspection.
 

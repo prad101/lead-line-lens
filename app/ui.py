@@ -7,6 +7,9 @@ import streamlit as st
 from lll import METHODOLOGY_URL, MODEL_CARD_URL
 
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
+UTILITY_EDITION = os.environ.get("LLL_UTILITY_EDITION", "1").strip().lower() in {
+    "1", "true", "yes", "on",
+}
 
 PRIVACY_NOTE = (
     "We do not save your address, your answers, or your letter. "

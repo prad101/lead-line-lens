@@ -62,3 +62,39 @@ class LetterResponse(BaseModel):
     docx_base64: str
     mailto: str
     subject: str
+
+
+class UtilityUploadResponse(BaseModel):
+    job_id: str
+    n_rows: int
+    columns: list[str]
+    suggested_mapping: dict[str, str]
+
+
+class UtilityMapRequest(BaseModel):
+    job_id: str
+    mapping: dict[str, str] | None = None
+    snapshot_date: str | None = None
+    system_name: str | None = None
+
+
+class UtilityJobRequest(BaseModel):
+    job_id: str
+
+
+class UtilityCounts(BaseModel):
+    n_rows: int
+    n_known: int
+    n_unknown: int
+    n_lead: int
+    n_grr: int
+    n_nonlead: int
+    mean_p_unknown: float | None = None
+    model_source: str | None = None
+    warning: str | None = None
+
+
+class UtilityExportResponse(BaseModel):
+    csv_base64: str
+    memo: str
+    filename: str

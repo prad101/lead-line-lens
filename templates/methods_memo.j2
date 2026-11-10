@@ -1,5 +1,62 @@
-{# Utility edition methods memo (two pages). Filled in Gate 6. #}
-Methods memo: {{ system_name }}
+{# Keep this memo in plain language. It is not a verification method. #}
+Lead Line Lens — utility edition methods memo
 
-This memo supports prioritization and statistical estimation only. Reclassifying an
-unknown line requires a verification method accepted by the Illinois EPA.
+System: {{ system_name or "uploaded inventory" }}
+{% if system_id %}System ID: {{ system_id }}
+{% endif %}Date of this run: {{ run_date }}
+Inventory rows: {{ n_rows }}
+Known customer-side rows (lead, galvanized, or not lead): {{ n_known }}
+Unknown customer-side rows: {{ n_unknown }}
+
+What this tool is
+
+This memo is for a water system that wants to plan checks and replacements. The scores
+help you decide where to look first. They are not an inspection. They are not a
+legal finding. Reclassifying an unknown line as not lead must use a method the
+Illinois EPA accepts.
+
+{% if transfer_warning %}
+How the scores were made
+
+{{ transfer_warning }}
+
+The Chicago model was trained on known customer-side rows in Chicago (snapshot
+14 April 2025). It uses year built, the city's side of the pipe, nearby known lines,
+and related fields. Many of those fields are missing in a small-system upload, so
+the score is a rough transfer. Treat every unknown line as possibly lead until it
+is checked.
+{% else %}
+How the scores were made
+
+This run had {{ n_known }} known customer-side rows, which is at least 200, so a
+new model was fit on this inventory only. The model predicts whether the property
+side is lead or galvanized. It is calibrated on the same known rows, so the
+percentages are a guide, not a proof. Treat every unknown line as possibly lead
+until it is checked.
+{% endif %}
+
+A prediction never lowers urgency. "{{ treat_as_lead }}"
+
+Verification sample
+
+A fixed sample of {{ sample_n }} unknown lines was drawn. Strata are year-built
+band and the city's side of the pipe. Sample size is not based on a margin of
+error (that step is deferred). Use the sample to check lines, not to skip them.
+
+Export
+
+The CSV follows the Illinois EPA inventory template column order. Official
+material columns are the recorded values (L, GRR, NL, U). Predicted probability
+and confidence sit in extra columns. Do not copy a prediction into an official
+class.
+
+Limits
+
+- One uploaded file, in memory only. Lead Line Lens does not store your inventory.
+- Transfer from Chicago is unproven. Local field checks still decide the class.
+- Small cells in public reports are suppressed; this private export lists every
+  sampled line so a utility can go check it.
+- This is not medical advice.
+
+Sources: Illinois EPA lead service line inventory template; Lead Line Lens model
+card (Chicago v1). {{ treat_as_lead }}
