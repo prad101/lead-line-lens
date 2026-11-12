@@ -18,18 +18,19 @@ from lll.utility import (
     summarize,
 )
 
-st.set_page_config(page_title="Utility edition - Lead Line Lens", layout="centered")
-st.title("Utility edition (prototype)")
+st.set_page_config(page_title="Utility inventory tools - Lead Line Lens", layout="centered")
+st.title("Utility inventory tools (prototype)")
 
 if not UTILITY_EDITION:
-    st.info("The utility edition is turned off on this site.")
+    st.info("Utility inventory tools are not available on this site.")
     footer()
     st.stop()
 
 st.warning(
-    "This tool supports prioritization and statistical estimation. Reclassifying an "
-    "unknown line as non-lead must follow methods the Illinois EPA accepts. "
-    "Your file stays in this browser session. It is not saved on the server."
+    "Use this tool to prioritize verification work and estimate likely materials. "
+    "It does not verify or reclassify a service line. An unknown line may be classified "
+    "as non-lead only through a method accepted by the Illinois EPA. Uploaded files are "
+    "kept only for the current session and are not saved."
 )
 st.caption(TREAT_AS_LEAD_MESSAGE)
 
@@ -40,13 +41,13 @@ def _reset() -> None:
 
 
 col_a, col_b, col_c = st.columns(3)
-if col_a.button("Try Burnham, IL"):
+if col_a.button("Load Burnham example"):
     from lll.sources import burnham
 
     _reset()
     st.session_state.mapped = burnham()
     st.session_state.system_name = "Burnham, IL (IL0310360)"
-if col_b.button("Try East Dundee, IL"):
+if col_b.button("Load East Dundee example"):
     from lll.sources import east_dundee
 
     _reset()
@@ -56,7 +57,9 @@ if col_c.button("Start over"):
     _reset()
     st.rerun()
 
-uploaded = st.file_uploader("Or upload a CSV or Excel inventory", type=["csv", "xlsx", "xls"])
+uploaded = st.file_uploader(
+    "Upload your own CSV or Excel inventory", type=["csv", "xlsx", "xls"]
+)
 if uploaded is not None:
     from lll.ingest import read_bytes
 
@@ -66,18 +69,19 @@ if uploaded is not None:
 
 raw = st.session_state.get("raw")
 if raw is not None and st.session_state.get("mapped") is None:
-    st.subheader("Match your columns")
+    st.subheader("Match inventory columns")
+    st.caption("For each standard field, select the matching column from your file.")
     suggested = suggest_mapping([str(c) for c in raw.columns])
     inverse = {canon: raw_name for raw_name, canon in suggested.items()}
-    options = ["(skip)"] + [str(c) for c in raw.columns]
+    options = ["(do not map)"] + [str(c) for c in raw.columns]
     mapping: dict[str, str] = {}
     for canon in CANONICAL_COLUMNS:
-        default = inverse.get(canon, "(skip)")
+        default = inverse.get(canon, "(do not map)")
         idx = options.index(default) if default in options else 0
         choice = st.selectbox(canon, options, index=idx, key=f"map_{canon}")
-        if choice != "(skip)":
+        if choice != "(do not map)":
             mapping[choice] = canon
-    if st.button("Use this mapping", type="primary"):
+    if st.button("Confirm column mapping", type="primary"):
         try:
             st.session_state.mapped = validate_inventory(
                 map_columns(raw, mapping, snapshot_date=dt.date.today().isoformat())
@@ -93,11 +97,12 @@ if mapped is None:
 st.subheader(st.session_state.get("system_name") or "Mapped inventory")
 base = summarize(mapped)
 st.write(
-    f"{base['n_rows']:,} lines. Known customer side: {base['n_known']:,}. "
-    f"Unknown: {base['n_unknown']:,}."
+    f"Inventory total: **{base['n_rows']:,} service lines**. "
+    f"Known property-side material: **{base['n_known']:,}**. "
+    f"Unknown property-side material: **{base['n_unknown']:,}**."
 )
 
-if st.button("Score unknown lines", type="primary"):
+if st.button("Estimate unknown service lines", type="primary"):
     scored, warning = classify(mapped)
     st.session_state.classified = scored
     st.session_state.warning = warning
@@ -112,24 +117,29 @@ counts = summarize(scored)
 if st.session_state.get("warning"):
     st.warning(st.session_state.warning)
 else:
-    st.success("A new model was fit on this inventory's known rows (200 or more).")
+    st.success(
+        "A local model was fitted using the known rows in this inventory "
+        "(at least 200 rows)."
+    )
 st.write(
-    f"Mean predicted chance of lead or galvanized among unknown lines: "
+    f"Average estimated chance of lead or galvanized material among unknown lines: "
     f"{counts['mean_p_unknown']:.0%}." if counts["mean_p_unknown"] is not None
-    else "No unknown lines to score."
+    else "This inventory has no unknown lines to estimate."
 )
-st.caption("A prediction never lowers urgency. Unknown stays possibly lead until checked.")
+st.caption(
+    "A prediction never reduces urgency. Treat every unknown line as lead until it is verified."
+)
 
 sample = st.session_state.get("sample")
 if sample is not None and len(sample):
-    st.subheader("Lines to check first")
+    st.subheader("Recommended verification sample")
     st.caption(
-        f"Fixed sample of {len(sample)} unknown lines, "
-        "by year built and city-side material."
+        f"This sample includes {len(sample)} unknown lines, grouped by construction year "
+        "and city-side material."
     )
     st.dataframe(sample, hide_index=True, width="stretch")
     st.download_button(
-        "Download the sample (CSV)",
+        "Download verification sample (CSV)",
         sample.to_csv(index=False).encode(),
         file_name="verification_sample.csv",
         mime="text/csv",
@@ -147,16 +157,16 @@ memo = methods_memo({
     "treat_as_lead": TREAT_AS_LEAD_MESSAGE,
 })
 export = export_il_epa_template(scored)
-st.subheader("Export")
+st.subheader("Download results")
 st.download_button(
-    "Download Illinois EPA template (CSV)",
+    "Download Illinois EPA inventory template (CSV)",
     export,
     file_name="il_epa_inventory_export.csv",
     mime="text/csv",
     type="primary",
 )
-st.download_button("Download the methods memo (text)", memo,
+st.download_button("Download methods memo (text)", memo,
                    file_name="methods_memo.txt", mime="text/plain")
-st.text_area("Methods memo", memo, height=220)
+st.text_area("Review the methods memo", memo, height=220)
 
 footer()

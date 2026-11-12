@@ -7,13 +7,13 @@ st.set_page_config(page_title="Lead Line Lens", page_icon=None, layout="centered
 
 st.title("Lead Line Lens")
 st.write(
-    "Find out what Chicago's records say about the water service line at your address, "
-    "what it likely is if the record says unknown, and what you can do today."
+    "Review Chicago's records for the water service line at your address. "
+    "If the material is unknown, see a model estimate and clear next steps."
 )
-st.page_link("pages/lookup.py", label="Look up an address")
-st.page_link("pages/report.py", label="Disparity report by ward and tract")
-st.page_link("pages/scorecards.py", label="Ward scorecards")
+st.page_link("pages/lookup.py", label="Check a Chicago address")
+st.page_link("pages/report.py", label="Explore service line disparities")
+st.page_link("pages/scorecards.py", label="View ward scorecards")
 if UTILITY_EDITION:
-    st.page_link("pages/utility.py", label="Utility edition (prototype)")
+    st.page_link("pages/utility.py", label="Open utility tools (prototype)")
 
 footer()

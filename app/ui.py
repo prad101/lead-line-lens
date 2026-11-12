@@ -12,8 +12,8 @@ UTILITY_EDITION = os.environ.get("LLL_UTILITY_EDITION", "1").strip().lower() in 
 }
 
 PRIVACY_NOTE = (
-    "We do not save your address, your answers, or your letter. "
-    "Everything stays in this browser session and is gone when you close the page."
+    "We do not save addresses, form responses, letters, or uploaded files. "
+    "Information is kept only for your current session and is cleared when the session ends."
 )
 
 

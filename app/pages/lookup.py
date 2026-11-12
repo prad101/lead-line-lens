@@ -26,7 +26,7 @@ from lll.predict import TREAT_AS_LEAD_MESSAGE
 
 assert len(PRIMARY_CLICKS) <= 5
 
-st.set_page_config(page_title="Look up an address - Lead Line Lens", layout="centered")
+st.set_page_config(page_title="Check an address - Lead Line Lens", layout="centered")
 st.markdown(
     """
     <style>
@@ -39,7 +39,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("Look up an address")
+st.title("Check a Chicago address")
 st.info(PRIVACY_NOTE)
 
 YES_NO = {"Yes": True, "No": False}
@@ -65,7 +65,7 @@ with st.form("lookup_form"):
 if looked_up:
     _clear_result()
     if not address or len(address.strip()) < 3:
-        st.error("Please enter a street address.")
+        st.error("Enter a Chicago street address.")
     else:
         try:
             st.session_state.lookup = fetch_lookup(address.strip())
@@ -73,13 +73,19 @@ if looked_up:
         except ApiError as err:
             if err.status_code == 404:
                 st.error(
-                    "No service line was found for that address. "
-                    "Check the house number and street."
+                    "We could not find a service line for that address. "
+                    "Check the house number and street name, then try again."
                 )
             elif err.status_code == 400:
-                st.error("Could not read that address. Try a house number, street, and city.")
+                st.error(
+                    "We could not recognize that address. "
+                    "Include the house number, street name, and city."
+                )
             elif err.status_code == 503:
-                st.error("The inventory is not loaded yet.")
+                st.error(
+                    "Service line records are not available right now. "
+                    "Please try again later."
+                )
             else:
                 st.error(err.detail)
 
@@ -91,45 +97,53 @@ if not data:
 
 line = data["lines"][0]
 n_lines = data["n_lines"]
-st.caption(f"City records as of {data['snapshot']}. Address is not saved.")
+st.caption(f"City records last updated {data['snapshot']}. Your address is not stored.")
 
-st.subheader("What city records say")
+st.subheader("Chicago service line records")
 if n_lines > 1:
-    st.write(f"City records list {n_lines} service lines at this address. Showing each one.")
+    st.write(f"City records include {n_lines} service lines at this address.")
 for i, row in enumerate(data["lines"], start=1):
     heading = f"Line {i}" if n_lines > 1 else "This service line"
     st.markdown(f"**{heading}**")
-    st.write(f"City side of the pipe: **{status_plain(row.get('utility_side_material'))}**")
-    st.write(f"Property side of the pipe: **{status_plain(row.get('customer_side_material'))}**")
+    st.write(
+        f"City side of the service line: "
+        f"**{status_plain(row.get('utility_side_material'))}**"
+    )
+    st.write(
+        f"Property side of the service line: "
+        f"**{status_plain(row.get('customer_side_material'))}**"
+    )
     if row.get("verification_method"):
-        st.write(f"How it was checked: {row['verification_method']}")
+        st.write(f"Verification method: {row['verification_method']}")
     if row.get("replaced"):
-        when = row.get("replacement_date") or "date not on file"
-        st.write(f"Marked replaced: {when}")
+        when = row.get("replacement_date") or "date not available"
+        st.write(f"Recorded as replaced: {when}")
     bits = [f"Ward {row['ward']}" if row.get("ward") else None,
-            f"tract {row['tract']}" if row.get("tract") else None]
+            f"Census tract {row['tract']}" if row.get("tract") else None]
     st.caption(" · ".join(b for b in bits if b) or "Location on file.")
     if row.get("message"):
         st.warning(row["message"])
 
 if pred:
-    st.subheader("What the model says")
+    st.subheader("Model estimate")
     st.write(pred.get("message") or TREAT_AS_LEAD_MESSAGE)
     p = pred.get("probability_lead")
     if p is not None:
         pct = round(float(p) * 100)
         tier = (pred.get("tier") or "Low").lower()
         st.write(
-            f"The model estimates about **{pct} in 100** chance the property side is "
-            f"lead or galvanized ({tier} confidence). This is not an inspection."
+            f"The model estimates about a **{pct} out of 100** chance that the property side "
+            f"is lead or galvanized. Confidence level: {tier}. This is not an inspection."
         )
         for reason in pred.get("reasons") or []:
             st.write(f"- {reason}")
     else:
-        st.caption("No model score is shown when city records already list a known material.")
+        st.caption(
+            "No model estimate is needed because city records already identify the material."
+        )
 
-st.subheader("A few questions")
-st.caption("Answers stay in this page session. They are not saved.")
+st.subheader("Tell us about your household")
+st.caption("Your responses are used only to tailor the next steps shown in this session.")
 with st.form("survey_form"):
     q1, q2, q3, q4, q5 = SURVEY_QUESTIONS
     child = st.radio(q1, list(YES_NO), index=None)
@@ -164,7 +178,7 @@ if not plan:
     footer()
     st.stop()
 
-st.subheader("What you can do today")
+st.subheader("Recommended next steps")
 for item in plan:
     st.markdown(f"- {markdown(item)}")
 
@@ -178,18 +192,21 @@ if st.button(LETTER_BUTTON, type="primary"):
 
 doc = st.session_state.get("letter_doc")
 if doc:
-    st.subheader("A letter you can edit and send")
-    st.caption("We do not send this for you. We do not guess a city inbox.")
+    st.subheader("Review your service line request")
+    st.caption(
+        "Lead Line Lens does not send this letter or choose a recipient. "
+        "Review and edit it before sending."
+    )
     st.text_area("Letter", doc["text"], height=280, label_visibility="collapsed")
     raw = base64.b64decode(doc["docx_base64"])
     st.download_button(
-        "Download as a Word file", raw,
+        "Download Word document", raw,
         file_name="service_line_request.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
-    st.download_button("Download as a text file", doc["text"],
+    st.download_button("Download text file", doc["text"],
                        file_name="service_line_request.txt", mime="text/plain")
-    st.link_button("Open in your email app", doc["mailto"])
+    st.link_button("Open a draft in your email app", doc["mailto"])
     st.caption(LEGAL_NOTE)
 
 if st.button("Start over"):

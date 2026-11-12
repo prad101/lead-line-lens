@@ -11,10 +11,10 @@ from lll import PROCESSED_DIR, sources
 from lll.equity import SUPPRESSION_MIN, choropleth
 
 METRICS = {
-    "share_needs_action": "Lead, galvanized, or unknown",
+    "share_needs_action": "Lines requiring action",
     "share_lead": "Confirmed lead",
-    "share_unknown": "Unknown (possibly lead until checked)",
-    "share_replaced": "Already replaced",
+    "share_unknown": "Unknown (possibly lead until verified)",
+    "share_replaced": "Replaced",
 }
 TABLES = {
     "ward": "Wards",
@@ -46,28 +46,33 @@ def pct(v) -> str:
     return "suppressed" if pd.isna(v) else f"{v:.0%}"
 
 
-st.set_page_config(page_title="Disparity report - Lead Line Lens", layout="wide")
-st.title("Lead service lines by ward and tract")
+st.set_page_config(page_title="Service line disparities - Lead Line Lens", layout="wide")
+st.title("Service line disparities across Chicago")
 st.write(
-    "How many water service lines in each part of Chicago are lead, galvanized, or still "
-    "unknown, and how that lines up with income and race. Unknown lines may be lead until "
-    "someone checks them."
+    "Compare lead, galvanized, and unknown service lines across Chicago wards and "
+    "census tracts. The report also shows patterns by household income and race or "
+    "ethnicity. Treat unknown lines as lead until they are verified."
 )
 
 eq_dir = _latest_equity_dir()
 if eq_dir is None:
-    st.warning("The report has not been built yet. Run `python scripts/build_equity.py`.")
+    st.warning(
+        "Report data is not available yet. "
+        "To create it locally, run `python scripts/build_equity.py`."
+    )
     footer()
     st.stop()
 
 tables = load_tables(str(eq_dir))
 geo = load_geometry()
 snapshot = eq_dir.name.rsplit("_", 1)[-1]
-st.caption(f"City inventory snapshot {snapshot[:4]}-{snapshot[4:6]}-{snapshot[6:]}.")
+st.caption(f"Based on the city inventory dated {snapshot[:4]}-{snapshot[4:6]}-{snapshot[6:]}.")
 
 c1, c2 = st.columns(2)
-level = c1.radio("Show", ["ward", "tract"], format_func=lambda x: TABLES[x], horizontal=True)
-metric = c2.selectbox("Measure", list(METRICS), format_func=METRICS.get)
+level = c1.radio(
+    "Geographic area", ["ward", "tract"], format_func=lambda x: TABLES[x], horizontal=True
+)
+metric = c2.selectbox("Measure to display", list(METRICS), format_func=METRICS.get)
 
 table = tables[level]
 tooltip = {"total_lines": "Lines", metric: METRICS[metric]}
@@ -79,7 +84,7 @@ m = choropleth(table, geo[level], metric, f"{METRICS[metric]}, by {TABLES[level]
                key=level, source=SOURCE, tooltip_cols=tooltip)
 st_folium(m, height=560, use_container_width=True, returned_objects=[])
 
-st.subheader("Who has the most lines to fix or check?")
+st.subheader("Where is action needed most?")
 ratios = tables["disparity_ratios"]
 q = ratios[(ratios.comparison == "income quartile") & (ratios.group == "Q1 lowest income")
            & (ratios.metric == "share_needs_action")]
@@ -88,21 +93,21 @@ la = ratios[(ratios.group == "Latino") & (ratios.metric == "share_needs_action")
 if not q.empty:
     r = q.iloc[0]
     st.write(
-        f"In the lowest-income quarter of tracts, **{pct(r.group_rate)}** of lines are lead, "
-        f"galvanized, or unknown, compared with **{pct(r.reference_rate)}** in the "
-        f"highest-income quarter ({r.ratio:.2f} times as high)."
+        f"Among tracts in the lowest-income quarter, **{pct(r.group_rate)}** of service "
+        f"lines require action. The share is **{pct(r.reference_rate)}** among tracts in "
+        f"the highest-income quarter, a ratio of {r.ratio:.2f} to 1."
     )
 if not b.empty and not la.empty:
     st.write(
-        f"In majority-Black tracts it is **{pct(b.iloc[0].group_rate)}** and in majority-Latino "
-        f"tracts **{pct(la.iloc[0].group_rate)}**, compared with "
-        f"**{pct(b.iloc[0].reference_rate)}** in majority-White tracts."
+        f"The share requiring action is **{pct(b.iloc[0].group_rate)}** in majority-Black "
+        f"tracts and **{pct(la.iloc[0].group_rate)}** in majority-Latino tracts, compared "
+        f"with **{pct(b.iloc[0].reference_rate)}** in majority-White tracts."
     )
 
 show = ["total_lines", "share_lead", "share_grr", "share_unknown", "share_needs_action",
         "share_replaced"]
-labels = {"total_lines": "Lines", "share_lead": "Lead", "share_grr": "Galvanized",
-          "share_unknown": "Unknown", "share_needs_action": "Lead, galv., or unknown",
+labels = {"total_lines": "Service lines", "share_lead": "Lead", "share_grr": "Galvanized",
+          "share_unknown": "Unknown", "share_needs_action": "Lines requiring action",
           "share_replaced": "Replaced", "areas": "Tracts", "income_min": "Income from",
           "income_max": "Income to"}
 fmt = {c: "{:.1%}" for c in show if c.startswith("share_")}
@@ -120,17 +125,19 @@ st.dataframe(race[show + ["areas"]].rename(columns=labels)
                            na_rep="suppressed"),
              width="stretch")
 st.caption(
-    "Shares pool all lines in each group of tracts. A disparity ratio is the group's share "
-    "divided by the reference group's share (highest-income quarter; majority-White tracts). "
-    "The Census reports incomes of $250,000 or more as $250,001."
+    "Each share combines all service lines in that group of tracts. A disparity ratio "
+    "compares the group's share with the reference group: the highest-income quarter or "
+    "majority-White tracts. The Census records incomes of $250,000 or more as $250,001."
 )
 
-st.subheader("Download the data")
+st.subheader("Download report data")
 cols = st.columns(len(TABLES))
 for col, (name, label) in zip(cols, TABLES.items(), strict=True):
     col.download_button(label, tables[name].to_csv(index=False).encode(),
                         file_name=f"lead_line_lens_{name}_{snapshot}.csv", mime="text/csv")
-st.caption(f"Every count and share for an area with fewer than {SUPPRESSION_MIN} lines is "
-           "blank in the downloads too.")
+st.caption(
+    f"To protect privacy, counts and shares are blank for areas with fewer than "
+    f"{SUPPRESSION_MIN} service lines. The same rule applies to downloaded files."
+)
 
 footer()

@@ -16,7 +16,7 @@ from lll.predict import TREAT_AS_LEAD_MESSAGE
 
 DWM_MAILTO = ""  # resident picks the recipient; we do not guess an inbox
 DEFAULT_SUBJECT = "Service line verification request"
-LEGAL_NOTE = "This letter is a request I can edit and send. It is not legal advice."
+LEGAL_NOTE = "Review and edit this request before sending it. This template is not legal advice."
 _NEEDS_REPLACE = ("Lead", "GRR", "Unknown")
 
 
