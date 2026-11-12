@@ -14,6 +14,8 @@ METRIC_CRS = "EPSG:26916"
 WGS84 = "EPSG:4326"
 
 LEAD_LIKE = ("Lead", "GRR")
+# Whole-line urgency for lookup/letter/predict when one address has several lines.
+URGENCY_RANK = {"Lead": 0, "GRR": 1, "Unknown": 2, "Non-Lead": 3}
 
 # Points this close to a ward or community area edge are assigned to the nearest one.
 EDGE_SNAP_M = 100.0
@@ -30,6 +32,28 @@ def line_status(utility_side: pd.Series, customer_side: pd.Series) -> pd.Series:
     for status in ("Unknown", "GRR", "Lead"):
         out[(u == status) | (c == status)] = status
     return out
+
+
+def sort_lines(df: pd.DataFrame) -> pd.DataFrame:
+    """Stable sort: Lead, then GRR, then Unknown, then Non-Lead.
+
+    Used when one address has several service lines so the worst recorded line
+    leads lookup, prediction, and the letter. Never lowers urgency.
+    """
+    if df is None or df.empty:
+        return df
+    if "line_status" in df.columns:
+        status = df["line_status"].astype(str)
+    else:
+        u = df["utility_side_material"] if "utility_side_material" in df.columns else "Unknown"
+        c = df["customer_side_material"] if "customer_side_material" in df.columns else "Unknown"
+        if not isinstance(u, pd.Series):
+            u = pd.Series([u] * len(df), index=df.index)
+        if not isinstance(c, pd.Series):
+            c = pd.Series([c] * len(df), index=df.index)
+        status = line_status(u, c)
+    rank = status.map(URGENCY_RANK).fillna(3)
+    return df.assign(_urgency=rank).sort_values("_urgency", kind="stable").drop(columns="_urgency")
 
 
 def to_points(df: pd.DataFrame, lat: str = "latitude", lon: str = "longitude") -> gpd.GeoDataFrame:

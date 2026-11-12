@@ -26,6 +26,7 @@ def test_lookup_page_renders_source_links_from_guidance():
     assert "markdown(item)" in src
     assert "fetch_letter" in src
     assert "PRIVACY_NOTE" in src
+    assert "LEGAL_NOTE" in src
 
 
 def _lum(hex_color: str) -> float:

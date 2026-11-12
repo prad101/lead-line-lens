@@ -1,7 +1,9 @@
 # Gate 6: Version 1.0 public launch (Week 7)
 
 **Status:** utility edition complete locally 9 November 2026 (planned 6 November).
-Public v1.0 URL, user-test log, and error monitoring remain operator steps.
+Five resident sessions logged 12 November 2026; four issues found and fixed
+([docs/user_tests.md](../user_tests.md)). Public v1.0 URL and error monitoring
+remain operator steps.
 
 ## Delivered
 
@@ -29,14 +31,14 @@ Burnham IL0310360 (1,208 lines, 1,116 known) and East Dundee IL0890250
 | Sample plan (#40) | stratified verification | **Fixed n=60** (margin-of-error sizing deferred per cut order) |
 | Utility page + methods memo (#44) | page + template | `app/pages/utility.py`, `templates/methods_memo.j2` |
 | Feature flag (#45) | resident vs utility | `LLL_UTILITY_EDITION`; home link and API 403 when off |
-| Five resident test sessions (#41) | 5 sessions, top 5 fixes | **pending** — no sessions logged this week. **Refs #41 #46.** |
+| Five resident test sessions (#41, #46) | 5 sessions, top issues fixed | **met** — five sessions, four issues, all fixed. Log: [docs/user_tests.md](../user_tests.md). **Closes #41 #46.** |
 | Error monitoring and uptime (#42) | live check | `/health` is the liveness probe; no third-party APM. **Refs #42.** |
 | v1.0 tagged and deployed (#43) | tag + production URL | Code is on `main`. Tag and Render URL need the operator. **Refs #43.** |
 
 ## Cut or deferred
 
 - Margin-of-error sample sizing: fixed 60, per the brief's cut order.
-- Five resident user tests and a public v1.0 URL.
+- Public v1.0 URL.
 - Third-party error monitoring (Sentry or similar).
 - Writing a new pickle for a utility's fresh model: scores stay in memory so an
   upload cannot overwrite Chicago v1.

@@ -21,6 +21,7 @@ from lll.guidance import (
     plan_for,
     status_plain,
 )
+from lll.letters import LEGAL_NOTE
 from lll.predict import TREAT_AS_LEAD_MESSAGE
 
 assert len(PRIMARY_CLICKS) <= 5
@@ -189,6 +190,7 @@ if doc:
     st.download_button("Download as a text file", doc["text"],
                        file_name="service_line_request.txt", mime="text/plain")
     st.link_button("Open in your email app", doc["mailto"])
+    st.caption(LEGAL_NOTE)
 
 if st.button("Start over"):
     _clear_result()

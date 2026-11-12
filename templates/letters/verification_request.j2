@@ -11,10 +11,23 @@ Hello,
 
 I am writing about the water service line at {{ address }}. City records{% if snapshot %} as of {{ snapshot }}{% endif %} say:
 
+{% if lines and lines|length > 1 -%}
+There are {{ lines|length }} service lines at this address:
+
+{% for L in lines -%}
+- Line {{ loop.index }}: city's side {{ L.utility_side_material }}; property side {{ L.customer_side_material }}
+{% endfor %}
+{% else -%}
 - The city's side of the line: {{ utility_side_material }}
 - The property's side of the line: {{ customer_side_material }}
-
-{% if customer_side_material == "Unknown" or utility_side_material == "Unknown" -%}
+{% endif %}
+{% set ns = namespace(any_unknown=false) -%}
+{% for L in lines -%}
+{% if L.utility_side_material == "Unknown" or L.customer_side_material == "Unknown" -%}
+{% set ns.any_unknown = true -%}
+{% endif -%}
+{% endfor -%}
+{% if ns.any_unknown or customer_side_material == "Unknown" or utility_side_material == "Unknown" -%}
 "Unknown" means the city has no record. Please treat this line as possibly lead until it is checked.
 {% endif -%}
 {% if probability_lead is not none -%}
@@ -35,8 +48,6 @@ I ask that the city:
 {% for item in requests -%}
 {{ loop.index }}. {{ item }}
 {% endfor %}
-
-This letter is a request I can edit and send. It is not legal advice.
 
 Thank you,
 A resident of {{ address }}

@@ -30,10 +30,12 @@ def lookup(address: str = Query(..., min_length=3, description="Street address i
         store = get()
     except FileNotFoundError:
         raise HTTPException(status_code=503, detail="Inventory is not loaded yet.") from None
+    from lll.features import sort_lines
+
     rows = store.lookup(address)
     if rows.empty:
         raise HTTPException(status_code=404, detail="No service line found for that address.")
-    lines = [line_record(r) for _, r in rows.iterrows()]
+    lines = [line_record(r) for _, r in sort_lines(rows).iterrows()]
     snap = store.snapshot
     if len(snap) == 8 and snap.isdigit():
         snap = f"{snap[:4]}-{snap[4:6]}-{snap[6:]}"

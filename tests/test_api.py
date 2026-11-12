@@ -157,6 +157,31 @@ def test_area_suppressed_and_published(monkeypatch):
     assert client.get("/area/ward/99").status_code == 404
 
 
+def test_lookup_sorts_lines_lead_before_unknown(monkeypatch):
+    import api.store as store_mod
+
+    unk = _store().lines.iloc[0].to_dict()
+    lead = dict(unk, line_id="L2", customer_side_material="Lead", line_status="Lead")
+    monkeypatch.setattr(store_mod, "get", lambda: _store(rows=[unk, lead]))
+    body = client.get("/lookup", params={"address": "123 N Main St"}).json()
+    assert body["n_lines"] == 2
+    assert body["lines"][0]["line_status"] == "Lead"
+    assert body["lines"][1]["line_status"] == "Unknown"
+
+
+def test_predict_uses_worst_row_not_first_row(monkeypatch):
+    import api.store as store_mod
+
+    unk = _store().lines.iloc[0].to_dict()
+    lead = dict(unk, line_id="L2", customer_side_material="Lead", line_status="Lead")
+    monkeypatch.setattr(store_mod, "get", lambda: _store(rows=[unk, lead], model={"ok": True}))
+    r = client.post("/predict", json={"address": "123 N Main St"})
+    assert r.status_code == 200
+    assert r.json()["probability_lead"] is None
+    assert "lead" in r.json()["message"].lower()
+    assert r.json()["customer_side_material"] == "Lead"
+
+
 def test_letter_returns_text_docx_and_mailto(monkeypatch):
     import api.store as store_mod
 
@@ -169,6 +194,21 @@ def test_letter_returns_text_docx_and_mailto(monkeypatch):
     assert body["docx_base64"]
     assert body["mailto"].startswith("mailto:")
     assert "Unknown" in body["text"]
+    assert "legal advice" not in body["text"].lower()
+
+
+def test_letter_lists_both_lines_when_one_is_lead(monkeypatch):
+    import api.store as store_mod
+
+    unk = _store().lines.iloc[0].to_dict()
+    lead = dict(unk, line_id="L2", customer_side_material="Lead", line_status="Lead")
+    monkeypatch.setattr(store_mod, "get", lambda: _store(rows=[unk, lead]))
+    body = client.post("/letter", json={"address": "123 N Main St"}).json()
+    text = body["text"]
+    assert "2 service lines" in text
+    assert "property side Lead" in text
+    assert "property side Unknown" in text
+    assert "legal advice" not in text.lower()
 
 
 def test_utility_upload_map_classify_export():

@@ -16,6 +16,8 @@ from lll.predict import TREAT_AS_LEAD_MESSAGE
 
 DWM_MAILTO = ""  # resident picks the recipient; we do not guess an inbox
 DEFAULT_SUBJECT = "Service line verification request"
+LEGAL_NOTE = "This letter is a request I can edit and send. It is not legal advice."
+_NEEDS_REPLACE = ("Lead", "GRR", "Unknown")
 
 
 @dataclass
@@ -32,13 +34,23 @@ class LetterContext:
     tenure: str = "own"
     snapshot: str | None = None
     requests: list[str] = field(default_factory=list)
+    lines: list[dict] = field(default_factory=list)
+
+
+def _sides(ctx: LetterContext) -> list[str]:
+    if ctx.lines:
+        out = []
+        for row in ctx.lines:
+            out.append(str(row.get("utility_side_material") or "Unknown"))
+            out.append(str(row.get("customer_side_material") or "Unknown"))
+        return out
+    return [ctx.utility_side_material, ctx.customer_side_material]
 
 
 def default_requests(ctx: LetterContext) -> list[str]:
     """What the letter asks the city to do, in plain language."""
     items = ["Check this service line with a method Illinois EPA accepts."]
-    if ctx.customer_side_material in ("Lead", "GRR", "Unknown") or \
-            ctx.utility_side_material in ("Lead", "GRR", "Unknown"):
+    if any(side in _NEEDS_REPLACE for side in _sides(ctx)):
         items.append("Replace the line if it is lead or galvanized, and tell me when.")
     if ctx.child_or_pregnancy:
         items.append("Give this home priority because a young child or pregnant person lives here.")
@@ -66,6 +78,10 @@ def render_letter(ctx: LetterContext, template: str = "verification_request.j2")
         child_or_pregnancy=ctx.child_or_pregnancy, has_filter=ctx.has_filter,
         notified=ctx.notified, tenure=ctx.tenure, snapshot=ctx.snapshot,
         requests=ctx.requests, treat_as_lead=TREAT_AS_LEAD_MESSAGE,
+        lines=ctx.lines or [{
+            "utility_side_material": ctx.utility_side_material,
+            "customer_side_material": ctx.customer_side_material,
+        }],
     )
     return "\n".join(line.rstrip() for line in text.splitlines()).strip() + "\n"
 

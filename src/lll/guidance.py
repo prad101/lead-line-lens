@@ -32,7 +32,7 @@ LINKS = {
     "epa_filter": (
         "U.S. EPA",
         "https://www.epa.gov/water-research/"
-        "consumer-tool-identifying-point-use-and-point-entry-drinking-water-filters-certified",
+        "consumer-tool-identifying-point-use-and-pitcher-filters-certified-reduce-lead",
     ),
     "test_kit": ("City of Chicago", "https://www.chicagowaterquality.org/"),
     "city_lookup": ("City of Chicago", "https://sli.chicagowaterquality.org/"),

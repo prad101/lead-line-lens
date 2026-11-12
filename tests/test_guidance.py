@@ -64,6 +64,14 @@ def test_guidance_and_questions_are_grade_eight_or_easier():
         assert textstat.flesch_kincaid_grade(q) <= MAX_GRADE
 
 
+def test_epa_filter_url_is_the_pitcher_filters_page():
+    from lll.guidance import LINKS
+
+    url = LINKS["epa_filter"][1]
+    assert "pitcher-filters-certified-reduce-lead" in url
+    assert url.startswith("https://")
+
+
 def test_status_plain_labels():
     assert status_plain("Lead") == "Lead"
     assert "possibly lead" in status_plain("Unknown").lower()

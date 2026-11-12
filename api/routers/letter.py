@@ -36,17 +36,27 @@ def letter(req: LetterRequest):
     snap = None
     prob = None
     tier = None
+    line_rows: list[dict] = []
     try:
         store = get()
         snap = store.snapshot
+        from lll.features import sort_lines
+
         rows = store.lookup(req.address)
         if not rows.empty:
-            r = rows.iloc[0]
+            ranked = sort_lines(rows)
+            r = ranked.iloc[0]
             utility = str(r.get("utility_side_material") or "Unknown")
             customer = str(r.get("customer_side_material") or "Unknown")
             from api.serialize import cell as _cell
             w = _cell(r.get("ward"))
             ward = int(w) if w is not None else None
+            line_rows = []
+            for _, row in ranked.iterrows():
+                line_rows.append({
+                    "utility_side_material": str(row.get("utility_side_material") or "Unknown"),
+                    "customer_side_material": str(row.get("customer_side_material") or "Unknown"),
+                })
             if customer not in ("Lead", "GRR", "Non-Lead") and store.model is not None:
                 feats = {c: r[c] if c in r.index else None for c in FEATURES}
                 pred = predict_line(feats, model=store.model)
@@ -61,6 +71,7 @@ def letter(req: LetterRequest):
         customer_side_material=customer, probability_lead=prob, tier=tier,
         child_or_pregnancy=req.child_or_pregnancy, has_filter=req.has_filter,
         notified=req.notified, tenure=req.tenure, snapshot=snap,
+        lines=line_rows,
     )
     text = render_letter(ctx)
     subject = f"{DEFAULT_SUBJECT}: {req.address}"

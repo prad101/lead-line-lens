@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from lll.features import AREA_LEVELS, build_master_table, line_status, neighbor_features
+from lll.features import AREA_LEVELS, build_master_table, line_status, neighbor_features, sort_lines
 
 # ~1.1 m per 1e-5 degree of latitude; these points sit on one Chicago block.
 BASE_LAT, BASE_LON = 41.88, -87.63
@@ -27,6 +27,17 @@ def test_line_status_priority():
     u = pd.Series(["Non-Lead", "Lead", "Unknown", "Non-Lead", "GRR"])
     c = pd.Series(["Non-Lead", "Unknown", "Non-Lead", "GRR", "Unknown"])
     assert list(line_status(u, c)) == ["Non-Lead", "Lead", "Unknown", "GRR", "GRR"]
+
+
+def test_sort_lines_lead_before_unknown():
+    df = pd.DataFrame({
+        "utility_side_material": ["Unknown", "Unknown", "Non-Lead", "GRR"],
+        "customer_side_material": ["Unknown", "Lead", "Non-Lead", "Unknown"],
+        "line_status": ["Unknown", "Lead", "Non-Lead", "GRR"],
+        "line_id": ["a", "b", "c", "d"],
+    })
+    ranked = sort_lines(df)
+    assert list(ranked["line_id"]) == ["b", "d", "a", "c"]
 
 
 def test_neighbor_features_never_see_own_label():

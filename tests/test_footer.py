@@ -3,7 +3,7 @@ from pathlib import Path
 from lll import METHODOLOGY_URL
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = [ROOT / "app" / "streamlit_app.py", *sorted((ROOT / "app" / "pages").glob("*.py"))]
+PAGES = [ROOT / "app" / "Home.py", *sorted((ROOT / "app" / "pages").glob("*.py"))]
 
 
 def test_every_page_renders_the_methodology_footer():

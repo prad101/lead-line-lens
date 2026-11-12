@@ -50,7 +50,7 @@ pip install -e ".[dev]"
 ruff check .
 pytest --cov
 uvicorn api.main:app --reload --no-access-log   # http://localhost:8000/docs
-streamlit run app/streamlit_app.py              # http://localhost:8501
+streamlit run app/Home.py                       # http://localhost:8501
 ```
 
 ### Build the master table

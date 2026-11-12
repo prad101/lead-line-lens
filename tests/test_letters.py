@@ -27,7 +27,7 @@ def test_letter_asks_for_check_and_never_calls_unknown_safe():
     assert "possibly lead" in text
     assert "89%" in text
     assert "pregnant" in text.lower() or "under 6" in text
-    assert "not legal advice" in text.lower()
+    assert "legal advice" not in text.lower()
     assert "Check this service line" in text
     assert "renter" in text.lower() or "owner" in text
 
@@ -55,3 +55,21 @@ def test_default_requests_for_known_nonlead_skip_replace():
                child_or_pregnancy=False, tenure="own", notified="unsure")
     items = default_requests(ctx)
     assert items == ["Check this service line with a method Illinois EPA accepts."]
+
+
+def test_letter_lists_every_line_and_leads_with_lead():
+    ctx = _ctx(
+        utility_side_material="Unknown",
+        customer_side_material="Lead",
+        probability_lead=None,
+        lines=[
+            {"utility_side_material": "Unknown", "customer_side_material": "Lead"},
+            {"utility_side_material": "Unknown", "customer_side_material": "Unknown"},
+        ],
+    )
+    text = render_letter(ctx)
+    assert "2 service lines" in text
+    assert "Line 1: city's side Unknown; property side Lead" in text
+    assert "Line 2: city's side Unknown; property side Unknown" in text
+    assert "legal advice" not in text.lower()
+    assert "Replace the line" in "".join(default_requests(ctx))

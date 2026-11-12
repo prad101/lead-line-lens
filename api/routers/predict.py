@@ -37,10 +37,12 @@ def predict(req: PredictRequest):
     recorded = None
     features = dict(req.features or {})
     if req.address:
+        from lll.features import sort_lines
+
         rows = store.lookup(req.address)
         if rows.empty:
             raise HTTPException(status_code=404, detail="No service line found for that address.")
-        recorded = rows.iloc[0]
+        recorded = sort_lines(rows).iloc[0]
         if not req.features:
             features = {c: recorded[c] if c in recorded.index else None for c in FEATURES}
 
