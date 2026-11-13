@@ -25,14 +25,22 @@ def ward_pdf(ward: int) -> bytes:
     return render(ward)
 
 
+# @st.cache_data(show_spinner="Preparing all 50 PDFs...")
+# def all_pdfs_zip() -> bytes:
+#     from lll.scorecard import generate_all
+
+#     buf = io.BytesIO()
+#     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+#         for p in generate_all():
+#             z.write(p, arcname=p.name)
+#     return buf.getvalue()
+
 @st.cache_data(show_spinner="Preparing all 50 PDFs...")
 def all_pdfs_zip() -> bytes:
-    from lll.scorecard import generate_all
-
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        for p in generate_all():
-            z.write(p, arcname=p.name)
+        for ward in range(1, 51):
+            z.writestr(f"ward_{ward:02d}.pdf", ward_pdf(ward))
     return buf.getvalue()
 
 
