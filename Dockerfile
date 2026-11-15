@@ -15,9 +15,21 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml README.md ./
+# COPY pyproject.toml README.md ./
+# COPY src ./src
+# RUN pip install .
+
+ENV POETRY_VERSION=1.8.5 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
+RUN pip install "poetry==${POETRY_VERSION}"
+
+COPY pyproject.toml poetry.lock README.md ./
 COPY src ./src
-RUN pip install .
+RUN poetry install --only main --no-ansi \
+    && rm -rf $POETRY_CACHE_DIR
 
 COPY data ./data
 COPY api ./api
