@@ -1,6 +1,5 @@
 .git
 .github
-data/raw
 notebooks
 prompts
 tests
