@@ -10,9 +10,11 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from lll import MODEL_DIR, PROCESSED_DIR
-from lll.features import AREA_LEVELS, latest_master
+from lll.features import AREA_LEVELS
 from lll.geocode import normalize_address
 from lll.train import FEATURES
 
@@ -22,6 +24,10 @@ LINE_COLUMNS: tuple[str, ...] = tuple(dict.fromkeys((
     "block", "block_group", "tract", "ward", "community_area",
     *FEATURES,
 )))
+
+# High-cardinality text stays as plain strings; other text column is dictionary-encoded
+# (a pandas category) so the ~490k-row table fits in a small instance.
+_KEEP_AS_TEXT = frozenset({"line_id", "address", "address_norm"})
 
 
 @dataclass
@@ -82,15 +88,32 @@ def _read_areas(snap: str) -> dict[str, pd.DataFrame]:
     return areas
 
 
+def _read_lines() -> tuple[pd.DataFrame, str]:
+    """Latest master table, reading only the columns the API serves. """
+
+    files = sorted(PROCESSED_DIR.glob("master_chicago_*.parquet"))
+    if not files:
+        raise FileNotFoundError("No master table; run scripts/build_master.py first.")
+    path = files[-1]
+    schema = pq.read_schema(path)
+    cols = [c for c in LINE_COLUMNS if c in schema.names]
+    text = [
+        c for c in cols
+        if c not in _KEEP_AS_TEXT
+        and (pa.types.is_string(schema.field(c).type)
+             or pa.types.is_large_string(schema.field(c).type))
+    ]
+    lines = pq.read_table(path, columns=cols, read_dictionary=text).to_pandas()
+    if "address_norm" in lines.columns:
+        lines["address_norm"] = lines["address_norm"].astype("string")
+    return lines, path.stem.rsplit("_", 1)[-1]
+
+
 @lru_cache(maxsize=2)
 def _load(fp: tuple[tuple[str, int], ...]) -> Store:
     from lll.predict import load_model
 
-    master, snap = latest_master()
-    cols = [c for c in LINE_COLUMNS if c in master.columns]
-    lines = master[cols].copy()
-    if "address_norm" in lines.columns:
-        lines["address_norm"] = lines["address_norm"].astype("string")
+    lines, snap = _read_lines()
     model = None
     try:
         model = load_model()

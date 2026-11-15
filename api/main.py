@@ -4,12 +4,28 @@ Privacy: addresses, survey answers, and letters are processed in memory only.
 Nothing from a request body or query string is written to disk, a database, or logs.
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from api.routers import area, letter, lookup, predict, scorecard, utility
 from lll import METHODOLOGY_URL, MODEL_CARD_URL, __version__
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Load the inventory and model once at startup, not inside the first request. """
+    from api.store import get
+
+    try:
+        get()
+    except FileNotFoundError:
+        pass
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Lead Line Lens API",
     version=__version__,
     description=(
