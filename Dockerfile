@@ -19,6 +19,7 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install .
 
+COPY data ./data
 COPY api ./api
 COPY app ./app
 COPY templates ./templates
