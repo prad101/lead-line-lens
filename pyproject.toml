@@ -12,6 +12,7 @@ version = "0.1.0"
 description = "Decode a water utility's lead service line inventory for residents, block clubs, and aldermanic offices."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
+dynamic = ["dependencies"]
 license = { text = "TBD (see LICENSE)" }
 authors = [{ name = "Pradyumna Kumar" }]
 [project.optional-dependencies]

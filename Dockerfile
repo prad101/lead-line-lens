@@ -19,7 +19,7 @@ WORKDIR /app
 # COPY src ./src
 # RUN pip install .
 
-ENV POETRY_VERSION=1.8.5 \
+ENV POETRY_VERSION=2.5.1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
