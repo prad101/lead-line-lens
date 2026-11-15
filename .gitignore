@@ -1,5 +1,5 @@
 # Data: raw downloads and generated tables never go in git
-data/raw/*
+# data/raw/*
 !data/raw/.gitkeep
 # data/processed/*
 !data/processed/.gitkeep
