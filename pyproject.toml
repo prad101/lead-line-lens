@@ -33,6 +33,7 @@ version = "0.1.0"
 description = "Decode a water utility's lead service line inventory..."
 readme = "README.md"
 packages = [{ include = "lll", from = "src" }]
+authors = ["Pradyumna Kumar"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
