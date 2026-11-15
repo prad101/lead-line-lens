@@ -1,0 +1,9 @@
+code,rows,share,description,matched
+matched_address,447307,0.9097060229202469,Exact match on normalized address,True
+matched_nearby,26001,0.05287926704019687,Nearest parcel on the same street and side within 10 address numbers (location only; no building attributes),True
+geocoded_census,9951,0.020237744175877814,Matched by Census Geocoder batch,True
+census_error,7585,0.01542591594553645,Census Geocoder request failed,False
+census_no_match,367,0.0007463824854333391,Census Geocoder returned no match,False
+intersection,346,0.0007036739508445105,"Address is a street intersection, not a building",False
+census_tie,123,0.00025014998830599647,Census Geocoder returned a tie,False
+parse_error,25,5.0843493558129365e-05,usaddress could not parse the address,False
